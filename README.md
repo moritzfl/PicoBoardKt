@@ -25,6 +25,21 @@ The parser and scaling logic follow the MIT Scratch Board technical guide, and t
 ./gradlew build
 ```
 
+## Beginner Guides
+
+- English: [BEGINNER_README.en.md](BEGINNER_README.en.md)
+- Deutsch: [BEGINNER_README.de.md](BEGINNER_README.de.md)
+
+The runnable Kotlin starter example is in:
+
+[Main.kt](examples/first-project-kotlin/src/main/kotlin/de/moritzf/picoboard/examples/firstproject/Main.kt)
+
+Run it with:
+
+```bash
+./gradlew runFirstProjectKotlin
+```
+
 ## CLI Sample
 
 List available serial ports:

@@ -14,6 +14,17 @@ repositories {
     mavenCentral()
 }
 
+val starterExample by sourceSets.creating {
+    java.srcDir("examples/first-project-kotlin/src/main/kotlin")
+    resources.srcDir("examples/first-project-kotlin/src/main/resources")
+
+    compileClasspath += sourceSets.main.get().output
+    runtimeClasspath += output + compileClasspath + sourceSets.main.get().output
+}
+
+configurations[starterExample.implementationConfigurationName].extendsFrom(configurations.implementation.get())
+configurations[starterExample.runtimeOnlyConfigurationName].extendsFrom(configurations.runtimeOnly.get())
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(11)
@@ -42,6 +53,10 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.named("check") {
+    dependsOn(tasks.named(starterExample.classesTaskName))
+}
+
 tasks.withType<Jar>().configureEach {
     manifest {
         attributes["Automatic-Module-Name"] = "de.moritzf.picoboard"
@@ -63,4 +78,11 @@ publishing {
 
 application {
     mainClass.set("de.moritzf.picoboard.cli.PicoBoardCliKt")
+}
+
+tasks.register<JavaExec>("runFirstProjectKotlin") {
+    group = "application"
+    description = "Runs the beginner Kotlin starter example."
+    classpath = starterExample.runtimeClasspath
+    mainClass.set("de.moritzf.picoboard.examples.firstproject.MainKt")
 }
