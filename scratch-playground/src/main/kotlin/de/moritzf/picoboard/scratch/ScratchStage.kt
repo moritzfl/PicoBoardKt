@@ -3,12 +3,15 @@ package de.moritzf.picoboard.scratch
 import korlibs.event.Key
 import korlibs.image.color.Colors
 import korlibs.image.color.RGBA
+import korlibs.image.format.readBitmap
 import korlibs.image.text.TextAlignment
+import korlibs.io.file.std.resourcesVfs
 import korlibs.korge.Korge
 import korlibs.korge.KorgeDisplayMode
 import korlibs.korge.view.Stage
 import korlibs.korge.view.addUpdater
 import korlibs.korge.view.circle
+import korlibs.korge.view.image
 import korlibs.korge.view.solidRect
 import korlibs.korge.view.text
 import korlibs.math.geom.Size
@@ -28,7 +31,9 @@ import kotlin.math.roundToInt
  * @param backgroundColor color rendered behind all sprites.
  * @param maxInitialWindowDimension the largest the initial window will be on either axis.
  *   The window is scaled down proportionally if the stage is larger than this value.
- * @param init block that sets up sprites, registers the game loop, and configures callbacks.
+ * @param init suspend block that sets up sprites, loads assets, registers the game loop,
+ *   and configures callbacks. The block runs in a coroutine context, so suspend functions
+ *   such as [ScratchStage.image] can be called directly inside it.
  */
 @Suppress("MagicNumber")
 public suspend fun scratchStage(
@@ -37,7 +42,7 @@ public suspend fun scratchStage(
     title: String = "Scratch Stage",
     backgroundColor: RGBA = Colors["#F5F1E8"],
     maxInitialWindowDimension: Int = 900,
-    init: ScratchStage.() -> Unit,
+    init: suspend ScratchStage.() -> Unit,
 ): Unit {
     require(width > 0) {
         "width must be greater than zero"
@@ -162,6 +167,39 @@ public class ScratchStage internal constructor(
     ): ScratchTextSprite {
         val view = korgeStage.text(text, textSize = fontSize, color = color, alignment = alignment)
         val sprite = ScratchTextSprite(this, view)
+        return sprite.apply(init)
+    }
+
+    /**
+     * Loads a PNG (or other image format) from the resources folder, creates an image sprite,
+     * and adds it to the stage.
+     *
+     * Place image files in `src/main/resources/` and refer to them by filename, e.g.
+     * `"player.png"`. Transparency in the image is rendered correctly. Collision detection
+     * uses a rectangular bounding box that defaults to the image's natural pixel dimensions;
+     * adjust [ScratchImageSprite.collisionWidth] and [ScratchImageSprite.collisionHeight] in
+     * the [init] block to exclude transparent padding.
+     *
+     * This is a suspend function and must be called from within the [scratchStage] init block
+     * or another suspend context.
+     *
+     * @param path resource-relative path to the image file, e.g. `"player.png"`.
+     * @param init optional configuration block run immediately after the sprite is created.
+     * @return the created [ScratchImageSprite].
+     */
+    public suspend fun image(
+        path: String,
+        init: ScratchImageSprite.() -> Unit = {},
+    ): ScratchImageSprite {
+        val bitmap = resourcesVfs[path].readBitmap().toBMP32()
+        val view = korgeStage.image(bitmap)
+        val sprite = ScratchImageSprite(
+            stage = this,
+            view = view,
+            bitmap = bitmap,
+            imageWidth = bitmap.width.toDouble(),
+            imageHeight = bitmap.height.toDouble(),
+        )
         return sprite.apply(init)
     }
 

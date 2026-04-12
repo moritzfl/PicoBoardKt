@@ -1,6 +1,7 @@
 package de.moritzf.picoboard.scratch.internal
 
 import de.moritzf.picoboard.scratch.ScratchRotationStyle
+import korlibs.image.bitmap.Bitmap32
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -78,6 +79,66 @@ internal data class ScratchRectangleShape(
     }
 }
 
+// Pixel sampling step in world-space units. Smaller = more accurate but more expensive.
+private const val PIXEL_SAMPLE_STEP = 2.0
+
+internal data class ScratchImageShape(
+    val center: ScratchVector,
+    val bitmap: Bitmap32,
+    val imageWidth: Double,
+    val imageHeight: Double,
+    val scale: Double,
+    // spriteRotationDegrees(direction, rotationStyle) — the CCW rotation in Scratch coords
+    val rotationDegrees: Double,
+    // true when LEFT_RIGHT style and the sprite faces left (image is mirrored horizontally)
+    val facingLeft: Boolean,
+) : ScratchShape {
+    override fun axisAlignedBounds(): ScratchBounds {
+        val halfW = (imageWidth * scale) / 2.0
+        val halfH = (imageHeight * scale) / 2.0
+        val rotRad = Math.toRadians(rotationDegrees)
+        val cosR = abs(cos(rotRad))
+        val sinR = abs(sin(rotRad))
+        return ScratchBounds(
+            minX = center.x - cosR * halfW - sinR * halfH,
+            maxX = center.x + cosR * halfW + sinR * halfH,
+            minY = center.y - sinR * halfW - cosR * halfH,
+            maxY = center.y + sinR * halfW + cosR * halfH,
+        )
+    }
+
+    // Returns true if the pixel at world position (worldX, worldY) is non-transparent.
+    //
+    // Transform chain (all in Scratch coordinates, y-up):
+    //   1. Translate: (dx, dy) = world point relative to sprite center
+    //   2. Undo rotation: inverse-rotate by rotationDegrees (CCW in Scratch coords)
+    //   3. Undo scale
+    //   4. Optionally flip x for LEFT_RIGHT mirror
+    //   5. Convert to pixel coords: flip y (image y goes down, Scratch y goes up)
+    //      pixelX = localX + imageWidth/2
+    //      pixelY = -localY + imageHeight/2
+    internal fun containsPoint(worldX: Double, worldY: Double): Boolean {
+        val dx = worldX - center.x
+        val dy = worldY - center.y
+
+        // Inverse of CCW rotation by rotationDegrees
+        val rotRad = Math.toRadians(rotationDegrees)
+        val cosR = cos(rotRad)
+        val sinR = sin(rotRad)
+        val localX = (dx * cosR + dy * sinR) / scale
+        val localY = (-dx * sinR + dy * cosR) / scale
+
+        val finalX = if (facingLeft) -localX else localX
+
+        val pixelX = (finalX + imageWidth / 2.0).toInt()
+        val pixelY = (-localY + imageHeight / 2.0).toInt()
+
+        if (pixelX < 0 || pixelX >= imageWidth.toInt() || pixelY < 0 || pixelY >= imageHeight.toInt()) return false
+
+        return bitmap[pixelX, pixelY].a > 0
+    }
+}
+
 internal data class ScratchBounds(
     val minX: Double,
     val maxX: Double,
@@ -140,7 +201,48 @@ internal fun touching(left: ScratchShape, right: ScratchShape): Boolean {
         left is ScratchRectangleShape && right is ScratchRectangleShape -> rectanglesTouch(left, right)
         left is ScratchCircleShape && right is ScratchRectangleShape -> circleTouchesRectangle(left, right)
         left is ScratchRectangleShape && right is ScratchCircleShape -> circleTouchesRectangle(right, left)
+        left is ScratchImageShape || right is ScratchImageShape -> pixelTouching(left, right)
         else -> false
+    }
+}
+
+// Pixel-perfect collision: samples world-space points in the AABB overlap and checks whether
+// each point lies inside both shapes simultaneously.
+private fun pixelTouching(left: ScratchShape, right: ScratchShape): Boolean {
+    val lb = left.axisAlignedBounds()
+    val rb = right.axisAlignedBounds()
+
+    val overlapMinX = max(lb.minX, rb.minX)
+    val overlapMaxX = min(lb.maxX, rb.maxX)
+    val overlapMinY = max(lb.minY, rb.minY)
+    val overlapMaxY = min(lb.maxY, rb.maxY)
+
+    if (overlapMinX >= overlapMaxX || overlapMinY >= overlapMaxY) return false
+
+    var sampleX = overlapMinX
+    while (sampleX <= overlapMaxX) {
+        var sampleY = overlapMinY
+        while (sampleY <= overlapMaxY) {
+            if (inShape(left, sampleX, sampleY) && inShape(right, sampleX, sampleY)) return true
+            sampleY += PIXEL_SAMPLE_STEP
+        }
+        sampleX += PIXEL_SAMPLE_STEP
+    }
+    return false
+}
+
+private fun inShape(shape: ScratchShape, x: Double, y: Double): Boolean {
+    return when (shape) {
+        is ScratchCircleShape -> {
+            val dx = x - shape.center.x
+            val dy = y - shape.center.y
+            (dx * dx + dy * dy) <= (shape.radius * shape.radius)
+        }
+        is ScratchRectangleShape -> {
+            val local = rotate(ScratchVector(x, y) - shape.center, -shape.rotationRadians)
+            abs(local.x) <= shape.halfWidth && abs(local.y) <= shape.halfHeight
+        }
+        is ScratchImageShape -> shape.containsPoint(x, y)
     }
 }
 

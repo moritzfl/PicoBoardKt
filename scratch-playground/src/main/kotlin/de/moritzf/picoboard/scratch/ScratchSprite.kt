@@ -2,6 +2,7 @@ package de.moritzf.picoboard.scratch
 
 import de.moritzf.picoboard.scratch.internal.ScratchBounds
 import de.moritzf.picoboard.scratch.internal.ScratchCircleShape
+import de.moritzf.picoboard.scratch.internal.ScratchImageShape
 import de.moritzf.picoboard.scratch.internal.ScratchRectangleShape
 import de.moritzf.picoboard.scratch.internal.ScratchShape
 import de.moritzf.picoboard.scratch.internal.ScratchVector
@@ -13,8 +14,11 @@ import de.moritzf.picoboard.scratch.internal.movePoint
 import de.moritzf.picoboard.scratch.internal.normalizeDirection
 import de.moritzf.picoboard.scratch.internal.spriteRotationDegrees
 import de.moritzf.picoboard.scratch.internal.touching
+import korlibs.image.bitmap.Bitmap32
+import korlibs.image.color.Colors
 import korlibs.image.color.RGBA
 import korlibs.korge.view.Anchorable
+import korlibs.korge.view.Image
 import korlibs.korge.view.Text
 import korlibs.korge.view.View
 import korlibs.korge.view.centered
@@ -387,6 +391,52 @@ public class ScratchRectangleSprite internal constructor(
             halfWidth = (width * scale) / 2.0,
             halfHeight = (height * scale) / 2.0,
             rotationDegrees = shapeRotationDegrees(),
+        )
+    }
+}
+
+/**
+ * An image sprite created via [ScratchStage.image].
+ *
+ * The image is rendered with full transparency support. Collision detection is pixel-perfect:
+ * two sprites are considered touching only when a non-transparent pixel of one overlaps a
+ * non-transparent pixel (or the solid area) of the other. Fully transparent pixels never
+ * participate in collisions.
+ *
+ * The sprite is centered on its [x]/[y] position. Its visual size and collision shape both
+ * scale with [ScratchSprite.scale].
+ *
+ * Tint the image with [color]; [Colors.WHITE] (the default) leaves colors unchanged.
+ */
+public class ScratchImageSprite internal constructor(
+    stage: ScratchStage,
+    view: Image,
+    private val bitmap: Bitmap32,
+    private val imageWidth: Double,
+    private val imageHeight: Double,
+) : ScratchSprite(stage, view) {
+    private val imageView: Image = view
+
+    /**
+     * Tint color multiplied with every pixel of the image. [Colors.WHITE] (the default)
+     * leaves the image colors unchanged. Any other color tints the image toward that hue.
+     */
+    override var color: RGBA
+        get() = imageView.colorMul
+        set(value) {
+            imageView.colorMul = value
+        }
+
+    override fun currentShape(): ScratchShape {
+        return ScratchImageShape(
+            center = ScratchVector(x, y),
+            bitmap = bitmap,
+            imageWidth = imageWidth,
+            imageHeight = imageHeight,
+            scale = scale,
+            rotationDegrees = shapeRotationDegrees(),
+            facingLeft = rotationStyle == ScratchRotationStyle.LEFT_RIGHT &&
+                directionVector(direction).x < 0,
         )
     }
 }
