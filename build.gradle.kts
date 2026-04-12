@@ -86,3 +86,15 @@ tasks.register<JavaExec>("runFirstProjectKotlin") {
     classpath = starterExample.runtimeClasspath
     mainClass.set("de.moritzf.picoboard.examples.firstproject.MainKt")
 }
+
+tasks.register("runCatchTheFallingBall") {
+    group = "application"
+    description = "Runs the Scratch-style Catch The Falling Ball example."
+    dependsOn(":scratch-playground:run")
+}
+
+tasks.register("runBallBreaker") {
+    group = "application"
+    description = "Legacy alias that runs the Catch The Falling Ball example."
+    dependsOn("runCatchTheFallingBall")
+}

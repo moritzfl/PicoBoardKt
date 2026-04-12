@@ -40,6 +40,32 @@ Run it with:
 ./gradlew runFirstProjectKotlin
 ```
 
+## Scratch Playground
+
+The repository also contains an optional KorGE-based playground module with a Scratch-shaped API for simple 2D projects:
+
+- fixed logical stage size with a resizable window that scales automatically
+- simple `rectangle(...)` and `circle(...)` sprites
+- centered Scratch-like coordinates
+- sprite properties such as `x`, `y`, `direction`, `size`, `scale`, `rotationStyle`, and `visible`
+- helpers such as `move(...)`, `turnLeft(...)`, `turnRight(...)`, `touching(...)`, `touchingEdge()`, and `ifOnEdgeBounce()`
+
+The playground guide is in:
+
+[scratch-playground/README.md](scratch-playground/README.md)
+
+The included catch-the-falling-ball example is in:
+
+[Main.kt](scratch-playground/src/main/kotlin/de/moritzf/picoboard/scratch/examples/catchthefallingball/Main.kt)
+
+Run it with:
+
+```bash
+./gradlew runCatchTheFallingBall
+```
+
+It tries PicoBoard auto-selection first. If no suitable board is available, it falls back to keyboard controls.
+
 ## CLI Sample
 
 List available serial ports:

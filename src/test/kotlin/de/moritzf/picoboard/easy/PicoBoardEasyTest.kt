@@ -6,10 +6,14 @@ import de.moritzf.picoboard.PicoBoardOptions
 import de.moritzf.picoboard.internal.PicoBoardPacketTransport
 import de.moritzf.picoboard.internal.buildPacket
 import java.time.Duration
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class PicoBoardEasyTest {
     @Test
@@ -118,6 +122,146 @@ class PicoBoardEasyTest {
         }
     }
 
+    @Test
+    fun `startPolling keeps easy getters updated`() {
+        val transport = FakePacketTransport(
+            mutableListOf(
+                buildPacket(
+                    listOf(
+                        15 to 4,
+                        0 to 100,
+                        1 to 200,
+                        2 to 300,
+                        3 to 0,
+                        4 to 400,
+                        5 to 500,
+                        6 to 600,
+                        7 to 700,
+                    ),
+                ),
+                buildPacket(
+                    listOf(
+                        15 to 4,
+                        0 to 101,
+                        1 to 201,
+                        2 to 301,
+                        3 to 1023,
+                        4 to 401,
+                        5 to 501,
+                        6 to 601,
+                        7 to 701,
+                    ),
+                ),
+            ),
+        )
+
+        val sliderValues = mutableListOf<Int>()
+        val buttonValues = mutableListOf<Boolean>()
+        val latch = CountDownLatch(2)
+
+        createProject(
+            transport = transport,
+            options = PicoBoardOptions(
+                pollingInterval = Duration.ofMillis(5),
+                pollingReadFailureRetries = 2,
+            ),
+        ).use { project ->
+            val handle = project.startPolling(intervalMillis = 5) {
+                sliderValues += slider()
+                buttonValues += buttonPressed()
+                latch.countDown()
+            }
+
+            assertTrue(latch.await(1, TimeUnit.SECONDS))
+            handle.stop()
+            assertNull(handle.failure())
+        }
+
+        assertEquals(listOf(68, 69), sliderValues)
+        assertEquals(listOf(true, false), buttonValues)
+    }
+
+    @Test
+    fun `startService delivers initial values immediately`() {
+        val transport = FakePacketTransport(
+            mutableListOf(
+                buildPacket(
+                    listOf(
+                        15 to 4,
+                        0 to 100,
+                        1 to 200,
+                        2 to 300,
+                        3 to 1023,
+                        4 to 400,
+                        5 to 500,
+                        6 to 600,
+                        7 to 700,
+                    ),
+                ),
+            ),
+        )
+
+        createService(transport).use { service ->
+            assertEquals(68, service.slider())
+            assertFalse(service.buttonPressed())
+            assertTrue(service.isRunning())
+        }
+    }
+
+    @Test
+    fun `startService keeps values updated through background polling`() {
+        val latch = CountDownLatch(2)
+        val transport = FakePacketTransport(
+            responses = mutableListOf(
+                buildPacket(
+                    listOf(
+                        15 to 4,
+                        0 to 100,
+                        1 to 200,
+                        2 to 300,
+                        3 to 0,
+                        4 to 400,
+                        5 to 500,
+                        6 to 600,
+                        7 to 700,
+                    ),
+                ),
+                buildPacket(
+                    listOf(
+                        15 to 4,
+                        0 to 101,
+                        1 to 201,
+                        2 to 301,
+                        3 to 1023,
+                        4 to 401,
+                        5 to 501,
+                        6 to 601,
+                        7 to 701,
+                    ),
+                ),
+            ),
+            onPacketRequested = { latch.countDown() },
+        )
+
+        createService(
+            transport = transport,
+            options = PicoBoardOptions(
+                pollingInterval = Duration.ofMillis(5),
+                pollingReadFailureRetries = 2,
+            ),
+            intervalMillis = 5,
+        ).use { service ->
+            assertEquals(68, service.slider())
+            assertTrue(service.buttonPressed())
+
+            assertTrue(latch.await(1, TimeUnit.SECONDS))
+            Thread.sleep(20) // let cachedValues be written after the second packet
+
+            assertEquals(69, service.slider())
+            assertFalse(service.buttonPressed())
+        }
+    }
+
     private fun createProject(
         transport: FakePacketTransport,
         options: PicoBoardOptions = PicoBoardOptions(),
@@ -131,20 +275,40 @@ class PicoBoardEasyTest {
             sleeper = { },
         )
     }
+
+    private fun createService(
+        transport: FakePacketTransport,
+        options: PicoBoardOptions = PicoBoardOptions(),
+        intervalMillis: Long = options.pollingInterval.toMillis(),
+    ): PicoBoardService {
+        return PicoBoardService(
+            project = PicoBoardProject(
+                connection = PicoBoardConnection(
+                    transport = transport,
+                    portIdentifier = "fake",
+                    options = options,
+                ),
+            ),
+            intervalMillis = intervalMillis,
+        )
+    }
 }
 
 private class FakePacketTransport(
     private val responses: MutableList<Any>,
+    private val onPacketRequested: (() -> Unit)? = null,
 ) : PicoBoardPacketTransport {
     override val identifier: String = "fake"
 
     override fun requestPacket(): ByteArray {
-        return when (val response = responses.removeFirstOrNull()) {
+        val result = when (val response = responses.removeFirstOrNull()) {
             null -> throw PicoBoardException("No more packets available")
             is ByteArray -> response
             is PicoBoardException -> throw response
             else -> error("Unsupported fake transport response: ${response::class.qualifiedName}")
         }
+        onPacketRequested?.invoke()
+        return result
     }
 
     fun remainingResponses(): Int {

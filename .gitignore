@@ -3,7 +3,12 @@ build/
 out/
 .kotlin/
 .idea/
+.vscode/
+.fleet/
 *.iml
 *.ipr
 *.iws
 .DS_Store
+hs_err_pid*
+replay_pid*
+*.hprof
