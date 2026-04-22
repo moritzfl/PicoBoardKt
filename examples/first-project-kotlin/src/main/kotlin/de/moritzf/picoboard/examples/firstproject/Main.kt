@@ -3,23 +3,21 @@ package de.moritzf.picoboard.examples.firstproject
 import de.moritzf.picoboard.easy.PicoBoardEasy
 
 fun main() {
-    println("Move the slider, cover the light sensor, or press the button.")
 
     PicoBoardEasy.run {
         every(100) {
-            val message = when {
-                buttonPressed() -> "The button is pressed"
-                light() < 30 -> "It is dark"
-                slider() > 50 -> "The slider is high"
-                else -> "Try moving a sensor"
-            }
 
-            println(
-                "slider=${slider()} " +
-                "light=${light()} " +
-                "sound=${sound()} " +
-                "button=${buttonPressed()} -> $message",
-            )
+            // Aufgabe 1: Versuche herauszufinden, wie du die integrierten Sensoren auf dem Picoboard auslesen kannst
+            // Aufgabe 2: Das Picoboard hat Anschlüsse für externe Sensoren.
+            //             - Probiere zunächst ohne einen Sensor herauszufinden, was passiert, wenn du die
+            //               Verbindungsklammern aneinander hälst.
+            //             - Versuche anschließend für möglichst viele Sensoren herauszufinden, was diese eigentlich
+            //               tun.
+            if (buttonPressed()) {
+                println("Jemand drückt auf den Knopf");
+            } else {
+                println("Niemand drückt auf den Knopf");
+            }
         }
     }
 }

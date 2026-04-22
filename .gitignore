@@ -9,6 +9,7 @@ out/
 *.ipr
 *.iws
 .DS_Store
+/.gradle-home/
 hs_err_pid*
 replay_pid*
 *.hprof

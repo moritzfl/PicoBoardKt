@@ -25,6 +25,21 @@ The parser and scaling logic follow the MIT Scratch Board technical guide, and t
 ./gradlew build
 ```
 
+## IntelliJ on Linux
+
+On this project, a normal IntelliJ installation on Linux works with the PicoBoard.
+Testing with IntelliJ's bundled JetBrains Runtime successfully opened `/dev/ttyUSB0`
+and read a valid PicoBoard packet.
+
+If PicoBoard access fails from your IDE, the usual causes are outside the library:
+
+- the IDE was installed from a sandboxed package format that restricts device access
+- the run configuration is using a different runtime or environment than your shell
+- the wrong serial device was selected
+
+For Linux development, prefer a normal JetBrains Toolbox or tarball installation
+over sandboxed package formats when you need direct access to `/dev/ttyUSB*`.
+
 ## Beginner Guides
 
 - English: [BEGINNER_README.en.md](BEGINNER_README.en.md)
@@ -148,4 +163,6 @@ public final class ReadPicoBoard {
 - On older systems, you may need FTDI VCP drivers installed before the PicoBoard appears as a serial device.
 - On macOS, the relevant port is typically `/dev/tty.usbserial-*` or `/dev/cu.usbserial-*`.
 - On Linux, it is commonly `/dev/ttyUSB*`.
+- On Linux, prefer the stable symlink under `/dev/serial/by-id/` when possible, for example `/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A5061E1Q-if00-port0`.
+- On Linux with IntelliJ, a Toolbox-installed IDE should be able to access the PicoBoard directly. If the IDE was installed through a sandboxed package format, serial device access may be blocked by the package runtime instead of by this library.
 - On Windows, it appears as `COMx`.
