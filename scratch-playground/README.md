@@ -2,6 +2,8 @@
 
 `scratch-playground` is an optional KorGE-based module that adds a Scratch-shaped 2D API on top of the PicoBoard library.
 
+This module is built and run with the repository-wide Java 21 toolchain.
+
 It is meant as the next step after the beginner PicoBoard examples:
 
 - students still read PicoBoard values with the easy API
@@ -68,9 +70,9 @@ suspend fun main() = scratchStage(width = 1000, height = 700, title = "My First 
 }
 ```
 
-## Catch The Falling Ball Example
+## Catch The Falling Ball Task
 
-The included example is here:
+The student starter is here:
 
 [Main.kt](src/main/kotlin/de/moritzf/picoboard/scratch/examples/catchthefallingball/Main.kt)
 
@@ -80,17 +82,21 @@ Run it from the repository root with:
 ./gradlew runCatchTheFallingBall
 ```
 
-You can also run the module task directly:
+The full solution is here:
+
+[Main.kt](src/main/kotlin/de/moritzf/picoboard/scratch/examples/catchthefallingball/solution/Main.kt)
+
+Run the full solution with:
+
+```bash
+./gradlew runCatchTheFallingBallSolution
+```
+
+You can also run the module tasks directly:
 
 ```bash
 ./gradlew :scratch-playground:run
+./gradlew :scratch-playground:runCatchTheFallingBallSolution
 ```
 
-Controls:
-
-- with PicoBoard:
-  slider moves the catcher, button starts or restarts
-- without PicoBoard:
-  Left/Right arrow keys move the catcher, Space starts or restarts
-
-The example first tries PicoBoard auto-selection. If no suitable device is found, it keeps running with keyboard controls.
+The solution first tries PicoBoard auto-selection. If no suitable device is found, it keeps running with keyboard controls.

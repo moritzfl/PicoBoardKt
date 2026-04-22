@@ -8,6 +8,7 @@ The library:
 - works on macOS, Linux, and Windows through `jSerialComm`
 - exposes both raw 10-bit sensor values and Scratch-style scaled values
 - supports one-shot reads and scheduled polling
+- uses a Java 21 toolchain for building and running the included Gradle tasks
 
 ## Status
 
@@ -24,6 +25,9 @@ The parser and scaling logic follow the MIT Scratch Board technical guide, and t
 ```bash
 ./gradlew build
 ```
+
+Gradle is configured to use Java 21 toolchains across the repository.
+If Java 21 is not installed locally, Gradle can provision it automatically.
 
 ## IntelliJ on Linux
 
@@ -69,7 +73,7 @@ The playground guide is in:
 
 [scratch-playground/README.md](scratch-playground/README.md)
 
-The included catch-the-falling-ball example is in:
+The included catch-the-falling-ball starter is in:
 
 [Main.kt](scratch-playground/src/main/kotlin/de/moritzf/picoboard/scratch/examples/catchthefallingball/Main.kt)
 
@@ -79,7 +83,17 @@ Run it with:
 ./gradlew runCatchTheFallingBall
 ```
 
-It tries PicoBoard auto-selection first. If no suitable board is available, it falls back to keyboard controls.
+The full solution is in:
+
+[Main.kt](scratch-playground/src/main/kotlin/de/moritzf/picoboard/scratch/examples/catchthefallingball/solution/Main.kt)
+
+Run it with:
+
+```bash
+./gradlew runCatchTheFallingBallSolution
+```
+
+The solution tries PicoBoard auto-selection first. If no suitable board is available, it falls back to keyboard controls.
 
 ## CLI Sample
 

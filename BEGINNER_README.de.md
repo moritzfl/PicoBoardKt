@@ -16,6 +16,8 @@ Du musst am Anfang keine seriellen Schnittstellen, Polling-Schleifen oder die ko
 
 Wenn der PicoBoard gefunden wird, erscheinen im Terminal laufend Werte.
 
+Die Gradle-Tasks in diesem Repository verwenden Java-21-Toolchains.
+
 ## Deine Erste Datei
 
 Das Starter-Beispiel liegt hier:

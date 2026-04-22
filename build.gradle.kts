@@ -1,7 +1,8 @@
+import org.gradle.api.tasks.JavaExec
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm") version "2.3.0"
     `java-library`
     application
     `maven-publish`
@@ -27,7 +28,7 @@ configurations[starterExample.runtimeOnlyConfigurationName].extendsFrom(configur
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
+        languageVersion = JavaLanguageVersion.of(21)
     }
     withSourcesJar()
     withJavadocJar()
@@ -35,12 +36,16 @@ java {
 
 kotlin {
     explicitApi()
-    jvmToolchain(11)
+    jvmToolchain(21)
 
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_11)
+        jvmTarget.set(JvmTarget.JVM_21)
         freeCompilerArgs.add("-Xjsr305=strict")
     }
+}
+
+val rootJavaLauncher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
 }
 
 dependencies {
@@ -61,6 +66,10 @@ tasks.withType<Jar>().configureEach {
     manifest {
         attributes["Automatic-Module-Name"] = "de.moritzf.picoboard"
     }
+}
+
+tasks.withType<JavaExec>().configureEach {
+    javaLauncher.set(rootJavaLauncher)
 }
 
 publishing {
@@ -89,12 +98,18 @@ tasks.register<JavaExec>("runFirstProjectKotlin") {
 
 tasks.register("runCatchTheFallingBall") {
     group = "application"
-    description = "Runs the Scratch-style Catch The Falling Ball example."
+    description = "Runs the Scratch-style Catch The Falling Ball starter."
     dependsOn(":scratch-playground:run")
+}
+
+tasks.register("runCatchTheFallingBallSolution") {
+    group = "application"
+    description = "Runs the full Scratch-style Catch The Falling Ball solution."
+    dependsOn(":scratch-playground:runCatchTheFallingBallSolution")
 }
 
 tasks.register("runBallBreaker") {
     group = "application"
-    description = "Legacy alias that runs the Catch The Falling Ball example."
+    description = "Legacy alias that runs the Catch The Falling Ball starter."
     dependsOn("runCatchTheFallingBall")
 }

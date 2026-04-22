@@ -16,6 +16,8 @@ You do not need to understand serial ports, polling loops, or the full library A
 
 If the board is found, you should see changing values in the console.
 
+The Gradle tasks in this repository use Java 21 toolchains.
+
 ## Your First File
 
 The starter example is in:
