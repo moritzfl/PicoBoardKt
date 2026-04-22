@@ -107,9 +107,3 @@ tasks.register("runCatchTheFallingBallSolution") {
     description = "Runs the full Scratch-style Catch The Falling Ball solution."
     dependsOn(":scratch-playground:runCatchTheFallingBallSolution")
 }
-
-tasks.register("runBallBreaker") {
-    group = "application"
-    description = "Legacy alias that runs the Catch The Falling Ball starter."
-    dependsOn("runCatchTheFallingBall")
-}
