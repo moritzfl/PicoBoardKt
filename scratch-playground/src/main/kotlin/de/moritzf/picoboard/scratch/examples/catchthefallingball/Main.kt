@@ -39,9 +39,6 @@ fun main(args: Array<String>): Unit {
                 rotationStyle = ScratchRotationStyle.DONT_ROTATE
             }
 
-            println("Starter for the task 'Catch The Falling Ball'")
-            println("Open the solution package if you need the full answer.")
-
             // Aufgabe 1:
             // Bewege den Fänger nach links und rechts.
             //
