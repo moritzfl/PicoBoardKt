@@ -1,5 +1,6 @@
 package de.moritzf.picoboard.scratch.examples.catchthefallingball
 
+import de.moritzf.picoboard.easy.PicoBoardEasy
 import de.moritzf.picoboard.scratch.ScratchRotationStyle
 import de.moritzf.picoboard.scratch.scratchStage
 import de.moritzf.picoboard.scratch.internal.relaunchScratchMainWithModuleAccessIfNeeded
@@ -9,6 +10,9 @@ import kotlinx.coroutines.runBlocking
 private const val STAGE_WIDTH: Int = 1000
 private const val STAGE_HEIGHT: Int = 700
 
+private const val GAME_LOOP_INTERVAL_MILLIS: Long = 16L
+private const val PICOBOARD_POLL_INTERVAL_MILLIS: Long = GAME_LOOP_INTERVAL_MILLIS / 2
+
 fun main(args: Array<String>): Unit {
     relaunchScratchMainWithModuleAccessIfNeeded(
         mainClassName = "de.moritzf.picoboard.scratch.examples.catchthefallingball.MainKt",
@@ -16,13 +20,34 @@ fun main(args: Array<String>): Unit {
     )
 
     runBlocking {
+        println("Starting Catch The Falling Ball.")
+        println("Keyboard fallback: Left/Right to move, Space to start or restart.")
+
+        var picoService = runCatching {
+            PicoBoardEasy.startService(intervalMillis = PICOBOARD_POLL_INTERVAL_MILLIS)
+        }.onSuccess {
+            println(
+                "Connected to PicoBoard on '${it.portIdentifier}'. " +
+                    "Use the slider to move and the button to start or restart.",
+            )
+        }.onFailure { failure ->
+            println(
+                "No PicoBoard was auto-selected (${failure.message ?: failure::class.simpleName}). " +
+                    "Using keyboard controls.",
+            )
+        }.getOrNull()
+
         scratchStage(
             width = STAGE_WIDTH,
             height = STAGE_HEIGHT,
             title = "Catch The Falling Ball",
             backgroundColor = Colors.DARKSLATEGRAY,
         ) {
-            rectangle(
+            onClose {
+                picoService?.close()
+            }
+
+            val catcher = rectangle(
                 width = 190.0,
                 height = 26.0,
                 color = Colors.GOLD,
@@ -31,7 +56,7 @@ fun main(args: Array<String>): Unit {
                 rotationStyle = ScratchRotationStyle.DONT_ROTATE
             }
 
-            circle(
+            val ball = circle(
                 radius = 20.0,
                 color = Colors.CORAL,
             ) {
@@ -39,17 +64,32 @@ fun main(args: Array<String>): Unit {
                 rotationStyle = ScratchRotationStyle.DONT_ROTATE
             }
 
-            // Aufgabe 1:
-            // Bewege den Fänger nach links und rechts.
-            //
-            // Aufgabe 2:
-            // Lasse den Ball nach unten fallen.
-            //
-            // Aufgabe 3:
-            // Wenn der Ball den Fänger berührt, soll der Ball wieder oben erscheinen.
-            //
-            // Aufgabe 4:
-            // Zähle mit, wie viele Bälle gefangen wurden.
+            forever {
+                val service = picoService
+                if (service != null && !service.isRunning()) {
+                    val failure = service.failure()
+                    println(
+                        "PicoBoard polling stopped (${failure?.message ?: "unknown reason"}). " +
+                            "Using keyboard controls.",
+                    )
+                    service.close()
+                    picoService = null
+                }
+
+                // Aufgabe 1:
+                // Bewege den Fänger nach links und rechts.
+                //
+                // Aufgabe 2:
+                // Lasse den Ball nach unten fallen.
+                //
+                // Aufgabe 3:
+                // Wenn der Ball den Fänger berührt, soll der Ball wieder oben erscheinen.
+                //
+                // Aufgabe 4:
+                // Zähle mit, wie viele Bälle gefangen wurden.
+
+                // Hier kann die Spiellogik umgesetzt werden
+            }
         }
     }
 }
