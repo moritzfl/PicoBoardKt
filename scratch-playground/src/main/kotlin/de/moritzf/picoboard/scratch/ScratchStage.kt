@@ -63,7 +63,7 @@ public suspend fun scratchStage(
         backgroundColor = backgroundColor,
         windowCreationConfig = GameWindowCreationConfig(resizable = true),
     ).start {
-        ScratchStage(this, width.toDouble(), height.toDouble()).init()
+        ScratchStage(this, width, height).init()
     }
 }
 
@@ -78,9 +78,9 @@ public suspend fun scratchStage(
 public class ScratchStage internal constructor(
     private val korgeStage: Stage,
     /** Logical width of the stage in pixels. */
-    public val width: Double,
+    public val width: Int,
     /** Logical height of the stage in pixels. */
-    public val height: Double,
+    public val height: Int,
 ) {
     internal val stageHalfWidth: Double = width / 2.0
     internal val stageHalfHeight: Double = height / 2.0
@@ -101,14 +101,14 @@ public class ScratchStage internal constructor(
      */
     @JvmOverloads
     public fun rectangle(
-        width: Double,
-        height: Double,
+        width: Int,
+        height: Int,
         color: RGBA = Colors.WHITE,
         init: ScratchRectangleSprite.() -> Unit = {},
     ): ScratchRectangleSprite {
         val sprite = ScratchRectangleSprite(
             stage = this,
-            view = korgeStage.solidRect(width, height, color),
+            view = korgeStage.solidRect(width.toDouble(), height.toDouble(), color),
             width = width,
             height = height,
         )
@@ -128,13 +128,13 @@ public class ScratchStage internal constructor(
      */
     @JvmOverloads
     public fun circle(
-        radius: Double,
+        radius: Int,
         color: RGBA = Colors.WHITE,
         init: ScratchCircleSprite.() -> Unit = {},
     ): ScratchCircleSprite {
         val sprite = ScratchCircleSprite(
             stage = this,
-            view = korgeStage.circle(radius, fill = color, stroke = color),
+            view = korgeStage.circle(radius.toDouble(), fill = color, stroke = color),
             radius = radius,
         )
         return sprite.apply(init)
@@ -160,12 +160,12 @@ public class ScratchStage internal constructor(
     @JvmOverloads
     public fun text(
         text: String = "",
-        fontSize: Double = 32.0,
+        fontSize: Int = 32,
         color: RGBA = Colors.WHITE,
         alignment: TextAlignment = TextAlignment.MIDDLE_CENTER,
         init: ScratchTextSprite.() -> Unit = {},
     ): ScratchTextSprite {
-        val view = korgeStage.text(text, textSize = fontSize, color = color, alignment = alignment)
+        val view = korgeStage.text(text, textSize = fontSize.toDouble(), color = color, alignment = alignment)
         val sprite = ScratchTextSprite(this, view)
         return sprite.apply(init)
     }

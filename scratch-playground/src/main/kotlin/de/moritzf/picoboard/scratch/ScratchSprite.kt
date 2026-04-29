@@ -23,6 +23,7 @@ import korlibs.korge.view.Text
 import korlibs.korge.view.View
 import korlibs.korge.view.centered
 import korlibs.math.geom.degrees
+import kotlin.math.roundToInt
 
 /**
  * Base class for all visible objects on a [ScratchStage].
@@ -44,7 +45,7 @@ public sealed class ScratchSprite protected constructor(
      * Horizontal position in stage coordinates. 0 is the center; negative values are to the
      * left, positive to the right.
      */
-    public var x: Double = 0.0
+    public var x: Int = 0
         set(value) {
             field = value
             syncView()
@@ -54,7 +55,7 @@ public sealed class ScratchSprite protected constructor(
      * Vertical position in stage coordinates. 0 is the center; negative values are below,
      * positive above.
      */
-    public var y: Double = 0.0
+    public var y: Int = 0
         set(value) {
             field = value
             syncView()
@@ -152,7 +153,7 @@ public sealed class ScratchSprite protected constructor(
      * @param x target horizontal position.
      * @param y target vertical position.
      */
-    public fun goTo(x: Double, y: Double): Unit {
+    public fun goTo(x: Int, y: Int): Unit {
         this.x = x
         this.y = y
     }
@@ -162,7 +163,7 @@ public sealed class ScratchSprite protected constructor(
      *
      * @param dx number of pixels to move right (negative moves left).
      */
-    public fun changeXBy(dx: Double): Unit {
+    public fun changeXBy(dx: Int): Unit {
         x += dx
     }
 
@@ -171,7 +172,7 @@ public sealed class ScratchSprite protected constructor(
      *
      * @param dy number of pixels to move up (negative moves down).
      */
-    public fun changeYBy(dy: Double): Unit {
+    public fun changeYBy(dy: Int): Unit {
         y += dy
     }
 
@@ -182,8 +183,8 @@ public sealed class ScratchSprite protected constructor(
      *
      * @param directionDegrees direction in degrees clockwise from north.
      */
-    public fun pointInDirection(directionDegrees: Double): Unit {
-        direction = directionDegrees
+    public fun pointInDirection(directionDegrees: Int): Unit {
+        direction = directionDegrees.toDouble()
     }
 
     /**
@@ -196,10 +197,10 @@ public sealed class ScratchSprite protected constructor(
     public fun pointTowards(other: ScratchSprite): Unit {
         val deltaX = other.x - x
         val deltaY = other.y - y
-        if (deltaX == 0.0 && deltaY == 0.0) {
+        if (deltaX == 0 && deltaY == 0) {
             return
         }
-        direction = Math.toDegrees(kotlin.math.atan2(deltaX, deltaY))
+        direction = Math.toDegrees(kotlin.math.atan2(deltaX.toDouble(), deltaY.toDouble()))
     }
 
     /**
@@ -207,9 +208,10 @@ public sealed class ScratchSprite protected constructor(
      *
      * @param steps number of pixels to move forward (negative moves backward).
      */
-    public fun move(steps: Double): Unit {
-        val moved = movePoint(ScratchVector(x, y), steps, direction)
-        goTo(moved.x, moved.y)
+    public fun move(steps: Int): Unit {
+        val moved = movePoint(ScratchVector(x.toDouble(), y.toDouble()), steps.toDouble(), direction)
+        this.x = moved.x.roundToInt()
+        this.y = moved.y.roundToInt()
     }
 
     /**
@@ -217,7 +219,7 @@ public sealed class ScratchSprite protected constructor(
      *
      * @param degrees angle to rotate right.
      */
-    public fun turnRight(degrees: Double): Unit {
+    public fun turnRight(degrees: Int): Unit {
         direction += degrees
     }
 
@@ -226,7 +228,7 @@ public sealed class ScratchSprite protected constructor(
      *
      * @param degrees angle to rotate left.
      */
-    public fun turnLeft(degrees: Double): Unit {
+    public fun turnLeft(degrees: Int): Unit {
         direction -= degrees
     }
 
@@ -266,13 +268,13 @@ public sealed class ScratchSprite protected constructor(
         }
 
         val clamped = clampPositionInsideStage(
-            center = ScratchVector(x, y),
+            center = ScratchVector(x.toDouble(), y.toDouble()),
             bounds = bounds,
             stageHalfWidth = stage.stageHalfWidth,
             stageHalfHeight = stage.stageHalfHeight,
         )
-        x = clamped.x
-        y = clamped.y
+        x = clamped.x.roundToInt()
+        y = clamped.y.roundToInt()
         direction = bounceDirection(direction, edgeCollision)
     }
 
@@ -343,7 +345,7 @@ public class ScratchCircleSprite internal constructor(
     stage: ScratchStage,
     view: korlibs.korge.view.Circle,
     /** Base radius in pixels, before any [scale] is applied. */
-    public val radius: Double,
+    public val radius: Int,
 ) : ScratchSprite(stage, view) {
     private val circleView: korlibs.korge.view.Circle = view
 
@@ -355,7 +357,7 @@ public class ScratchCircleSprite internal constructor(
 
     override fun currentShape(): ScratchShape {
         return ScratchCircleShape(
-            center = ScratchVector(x, y),
+            center = ScratchVector(x.toDouble(), y.toDouble()),
             radius = radius * scale,
         )
     }
@@ -373,9 +375,9 @@ public class ScratchRectangleSprite internal constructor(
     stage: ScratchStage,
     view: korlibs.korge.view.SolidRect,
     /** Base width in pixels, before any [scale] is applied. */
-    public val width: Double,
+    public val width: Int,
     /** Base height in pixels, before any [scale] is applied. */
-    public val height: Double,
+    public val height: Int,
 ) : ScratchSprite(stage, view) {
     private val rectangleView: korlibs.korge.view.SolidRect = view
 
@@ -387,7 +389,7 @@ public class ScratchRectangleSprite internal constructor(
 
     override fun currentShape(): ScratchShape {
         return ScratchRectangleShape(
-            center = ScratchVector(x, y),
+            center = ScratchVector(x.toDouble(), y.toDouble()),
             halfWidth = (width * scale) / 2.0,
             halfHeight = (height * scale) / 2.0,
             rotationDegrees = shapeRotationDegrees(),
@@ -429,7 +431,7 @@ public class ScratchImageSprite internal constructor(
 
     override fun currentShape(): ScratchShape {
         return ScratchImageShape(
-            center = ScratchVector(x, y),
+            center = ScratchVector(x.toDouble(), y.toDouble()),
             bitmap = bitmap,
             imageWidth = imageWidth,
             imageHeight = imageHeight,
@@ -456,7 +458,7 @@ public class ScratchTextSprite internal constructor(
      * Horizontal position in stage coordinates. 0 is the center; negative values are to the
      * left, positive to the right.
      */
-    public var x: Double = 0.0
+    public var x: Int = 0
         set(value) {
             field = value
             syncView()
@@ -466,7 +468,7 @@ public class ScratchTextSprite internal constructor(
      * Vertical position in stage coordinates. 0 is the center; negative values are below,
      * positive above.
      */
-    public var y: Double = 0.0
+    public var y: Int = 0
         set(value) {
             field = value
             syncView()
@@ -487,10 +489,10 @@ public class ScratchTextSprite internal constructor(
         }
 
     /** Font size in pixels. */
-    public var fontSize: Double
-        get() = view.textSize
+    public var fontSize: Int
+        get() = view.textSize.toInt()
         set(value) {
-            view.textSize = value
+            view.textSize = value.toDouble()
         }
 
     /** Whether the label is rendered on screen. `true` means visible, `false` means hidden. */
@@ -528,7 +530,7 @@ public class ScratchTextSprite internal constructor(
      * @param x target horizontal position.
      * @param y target vertical position.
      */
-    public fun goTo(x: Double, y: Double): Unit {
+    public fun goTo(x: Int, y: Int): Unit {
         this.x = x
         this.y = y
     }

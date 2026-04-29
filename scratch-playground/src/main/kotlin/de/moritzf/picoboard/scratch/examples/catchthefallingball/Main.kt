@@ -48,19 +48,19 @@ fun main(args: Array<String>): Unit {
             }
 
             val catcher = rectangle(
-                width = 190.0,
-                height = 26.0,
+                width = 190,
+                height = 26,
                 color = Colors.GOLD,
             ) {
-                goTo(0.0, -285.0)
+                goTo(0, -285)
                 rotationStyle = ScratchRotationStyle.DONT_ROTATE
             }
 
             val ball = circle(
-                radius = 20.0,
+                radius = 20,
                 color = Colors.CORAL,
             ) {
-                goTo(0.0, 285.0)
+                goTo(0, 285)
                 rotationStyle = ScratchRotationStyle.DONT_ROTATE
             }
 

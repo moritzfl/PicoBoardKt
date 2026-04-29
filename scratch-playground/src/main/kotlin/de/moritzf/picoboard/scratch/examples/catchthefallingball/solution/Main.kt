@@ -16,15 +16,15 @@ import kotlin.random.Random
 
 private const val STAGE_WIDTH: Int = 1000
 private const val STAGE_HEIGHT: Int = 700
-private const val CATCHER_WIDTH: Double = 190.0
-private const val CATCHER_HEIGHT: Double = 26.0
-private const val CATCHER_Y: Double = -285.0
-private const val CATCHER_SPEED: Double = 18.0
-private const val BALL_RADIUS: Double = 20.0
-private const val BALL_START_SPEED: Double = 7.0
-private const val BALL_SPEED_STEP: Double = 0.6
-private const val BALL_MAX_SPEED: Double = 16.0
-private const val LIFE_ICON_RADIUS: Double = 10.0
+private const val CATCHER_WIDTH: Int = 190
+private const val CATCHER_HEIGHT: Int = 26
+private const val CATCHER_Y: Int = -285
+private const val CATCHER_SPEED: Int = 18
+private const val BALL_RADIUS: Int = 20
+private const val BALL_START_SPEED: Int = 7
+private const val BALL_SPEED_STEP: Int = 1
+private const val BALL_MAX_SPEED: Int = 16
+private const val LIFE_ICON_RADIUS: Int = 10
 private const val START_LIVES: Int = 3
 
 // The game loop runs at ~60 fps (~16 ms/frame). Poll at least 2x that rate so every
@@ -80,7 +80,7 @@ fun main(args: Array<String>): Unit {
                 height = CATCHER_HEIGHT,
                 color = Colors.GOLD,
             ) {
-                goTo(0.0, CATCHER_Y)
+                goTo(0, CATCHER_Y)
                 rotationStyle = ScratchRotationStyle.DONT_ROTATE
             }
 
@@ -97,22 +97,22 @@ fun main(args: Array<String>): Unit {
                     color = Colors.CRIMSON,
                 ) {
                     goTo(
-                        x = -(width / 2.0) + 28.0 + (index * 28.0),
-                        y = (height / 2.0) - 28.0,
+                        x = -(width / 2) + 28 + (index * 28),
+                        y = (height / 2) - 28,
                     )
                     rotationStyle = ScratchRotationStyle.DONT_ROTATE
                 }
             }
 
-            val gameOverText = text(fontSize = 40.0) {
+            val gameOverText = text(fontSize = 40) {
                 hide()
             }
 
             val scoreText = text(
-                fontSize = 28.0,
+                fontSize = 28,
                 alignment = TextAlignment.TOP_RIGHT,
             ) {
-                goTo(x = width / 2.0 - 16.0, y = height / 2.0 - 16.0)
+                goTo(x = width / 2 - 16, y = height / 2 - 16)
                 hide()
             }
 
@@ -129,15 +129,15 @@ fun main(args: Array<String>): Unit {
             }
 
             fun resetBall(): Unit {
-                val margin = ball.radius + 24.0
-                val spawnX = random.nextDouble(
-                    from = -(width / 2.0) + margin,
-                    until = (width / 2.0) - margin,
+                val margin = ball.radius + 24
+                val spawnX = random.nextInt(
+                    from = -(width / 2) + margin,
+                    until = (width / 2) - margin,
                 )
-                val spawnY = (height / 2.0) - ball.radius - 32.0
+                val spawnY = (height / 2) - ball.radius - 32
 
                 ball.goTo(spawnX, spawnY)
-                ball.pointInDirection(180.0)
+                ball.pointInDirection(180)
             }
 
             fun prepareNewGame(printInstructions: Boolean): Unit {
@@ -145,7 +145,7 @@ fun main(args: Array<String>): Unit {
                 lives = START_LIVES
                 ballSpeed = BALL_START_SPEED
                 gameState = GameState.READY
-                catcher.goTo(0.0, CATCHER_Y)
+                catcher.goTo(0, CATCHER_Y)
                 gameOverText.hide()
                 scoreText.hide()
                 updateLifeIcons()
@@ -209,7 +209,7 @@ fun main(args: Array<String>): Unit {
                     return@forever
                 }
 
-                if (ball.y < -(height / 2.0) - (ball.radius * ball.scale)) {
+                if (ball.y < -(height / 2) - ball.radius) {
                     lives -= 1
                     updateLifeIcons()
 
@@ -234,15 +234,15 @@ private fun ScratchStage.updateCatcherPosition(
     catcher: ScratchRectangleSprite,
     service: PicoBoardService?,
 ): Unit {
-    val maxCatcherX = (width / 2.0) - ((catcher.width * catcher.scale) / 2.0) - 8.0
+    val maxCatcherX = width / 2 - catcher.width / 2 - 8
 
     if (service != null) {
         val normalizedSlider = (service.slider() / 100.0) * 2.0 - 1.0
-        catcher.x = (normalizedSlider * maxCatcherX).coerceIn(-maxCatcherX, maxCatcherX)
+        catcher.x = (normalizedSlider * maxCatcherX).toInt().coerceIn(-maxCatcherX, maxCatcherX)
         return
     }
 
-    var delta = 0.0
+    var delta = 0
     if (keyPressed(Key.LEFT)) {
         delta -= CATCHER_SPEED
     }
@@ -250,7 +250,7 @@ private fun ScratchStage.updateCatcherPosition(
         delta += CATCHER_SPEED
     }
 
-    if (delta != 0.0) {
+    if (delta != 0) {
         catcher.x = (catcher.x + delta).coerceIn(-maxCatcherX, maxCatcherX)
     }
 }
